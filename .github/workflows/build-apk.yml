@@ -1,0 +1,59 @@
+name: Build REED Android APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main, master ]
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Setup Gradle 8.7
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.7'
+
+      - name: Prepare Android SDK & Build APK
+        shell: bash
+        run: |
+          set +o pipefail
+          SDK_DIR="${ANDROID_HOME:-/usr/local/lib/android/sdk}"
+          export ANDROID_HOME="$SDK_DIR"
+          export ANDROID_SDK_ROOT="$SDK_DIR"
+
+          SDKMAN="$SDK_DIR/cmdline-tools/latest/bin/sdkmanager"
+          if [ -x "$SDKMAN" ]; then
+            yes | "$SDKMAN" --licenses > /dev/null 2>&1 || true
+            "$SDKMAN" "platforms;android-34" "build-tools;34.0.0"
+          fi
+
+          SETTINGS_FILE=$(find . -maxdepth 4 -name "settings.gradle" | head -n 1)
+          if [ -z "$SETTINGS_FILE" ]; then
+            echo "ERROR: settings.gradle not found in repo!"
+            ls -la
+            exit 1
+          fi
+
+          PROJ_DIR=$(dirname "$SETTINGS_FILE")
+          echo "Building Android APK in: $PROJ_DIR"
+          cd "$PROJ_DIR"
+          gradle assembleDebug --no-daemon --stacktrace
+
+          cp app/build/outputs/apk/debug/app-debug.apk REED-Ops.apk
+
+      - name: Upload REED-Ops.apk
+        uses: actions/upload-artifact@v4
+        with:
+          name: REED-Ops-APK
+          path: "**/REED-Ops.apk"
+          if-no-files-found: error

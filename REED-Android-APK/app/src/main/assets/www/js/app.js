@@ -1364,6 +1364,7 @@
 
   function renderReturnSession() {
     $('sess-valid').textContent = ui.session.valid;
+    if ($('live-scan-count')) $('live-scan-count').textContent = ui.session.valid;
     $('sess-dup').textContent = ui.session.dup;
     $('sess-leopards').textContent = ui.session.leopards;
     $('sess-trax').textContent = ui.session.trax;
@@ -2209,7 +2210,10 @@
         updateReturnCamUI(false);
       }
     });
-    $('btn-stop-return-cam').addEventListener('click', async () => { await App.Scanner.stop(); updateReturnCamUI(false); });
+    const stopReturnCam = async () => { await App.Scanner.stop(); updateReturnCamUI(false); };
+    $('btn-stop-return-cam').addEventListener('click', stopReturnCam);
+    if ($('btn-live-cam-back')) $('btn-live-cam-back').addEventListener('click', stopReturnCam);
+    if ($('btn-live-cam-done')) $('btn-live-cam-done').addEventListener('click', stopReturnCam);
     $('btn-return-torch').addEventListener('click', async () => {
       const r = await App.Scanner.toggleTorch();
       $('btn-return-torch').textContent = r.torchOn ? 'Flash ON' : 'Flash';

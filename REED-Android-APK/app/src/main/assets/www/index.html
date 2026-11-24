@@ -744,10 +744,6 @@
             </div>
 
             <div id="return-camera-stage" class="optical-stage">
-              <div class="live-hud-top-row">
-                <button type="button" class="live-hud-back-btn" aria-label="Close camera" onclick="var b=document.getElementById('btn-stop-return-cam');if(b)b.click();">&#8592;</button>
-                <button type="button" class="live-hud-done-btn" onclick="var b=document.getElementById('btn-stop-return-cam');if(b)b.click();">Done</button>
-              </div>
               <span class="optical-status-pill"><span class="dot dot-green"></span><span id="scanner-engine-lbl">READY • 1D OPTICAL</span></span>
               <div id="return-camera-reader" style="width:100%;"></div>
               <div class="live-viewfinder-overlay" aria-hidden="true">
@@ -780,23 +776,12 @@
               <button type="button" id="btn-start-return-cam" class="btn btn-primary optical-start-btn">Start Camera</button>
               <button type="button" id="btn-stop-return-cam" class="btn btn-danger-solid optical-stop-btn" style="display:none;">Done</button>
             </div>
+
+            <div class="live-hud-top-row">
+              <button type="button" id="btn-live-cam-back" class="live-hud-back-btn" aria-label="Close camera">&#8592;</button>
+              <button type="button" id="btn-live-cam-done" class="live-hud-done-btn">Done</button>
+            </div>
           </div>
-          <script>
-            (function () {
-              function syncScanCount() {
-                var src = document.getElementById('sess-valid');
-                var dst = document.getElementById('live-scan-count');
-                if (src && dst) dst.textContent = src.textContent || '0';
-              }
-              document.addEventListener('DOMContentLoaded', function () {
-                var src = document.getElementById('sess-valid');
-                if (src && typeof MutationObserver !== 'undefined') {
-                  new MutationObserver(syncScanCount).observe(src, { childList: true, characterData: true, subtree: true });
-                }
-                syncScanCount();
-              });
-            })();
-          </script>
           <div id="return-camera-error" style="color:var(--red-text); font-size:12px; display:none;"></div>
 
           <form id="return-scan-form" class="scanner-input-bar" autocomplete="off">

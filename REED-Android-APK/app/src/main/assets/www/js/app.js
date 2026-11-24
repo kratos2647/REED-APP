@@ -2811,11 +2811,10 @@
 
   let lockForcePinMode = false;
   function configureLockOverlay(preferPin) {
-    const isHost = Boolean(App.CloudSync && App.CloudSync.hasLocalDiskBackend());
     const staffCount = App.Security.getStaffList ? App.Security.getStaffList().length : 0;
     const pinOn = App.Security.loadConfig().pinEnabled;
-    // On Desktop Host PC, default to Host PIN (2647); on Web/Mobile, default to Staff ID & Password
-    const defaultToPin = preferPin === true || (isHost && pinOn && preferPin !== false);
+    // Always default to Host PIN first (with Staff Login button below) whenever PIN is enabled
+    const defaultToPin = preferPin === true || (pinOn && preferPin !== false);
     const useStaff = staffCount > 0 && !(defaultToPin && pinOn);
     lockForcePinMode = !useStaff;
 
@@ -2824,7 +2823,7 @@
     if ($('inp-lock-pin')) $('inp-lock-pin').required = !useStaff;
     if ($('inp-login-id')) $('inp-login-id').required = useStaff;
     if ($('inp-login-pass')) $('inp-login-pass').required = useStaff;
-    if ($('lock-title')) $('lock-title').textContent = useStaff ? 'REED Staff Login' : isHost ? 'REED Host Unlock' : 'REED Ops Locked';
+    if ($('lock-title')) $('lock-title').textContent = useStaff ? 'REED Staff Login' : 'REED Host Unlock';
     if ($('lock-subtitle')) {
       $('lock-subtitle').textContent = useStaff
         ? 'Enter your Employee Staff ID & Password.'
@@ -2838,14 +2837,14 @@
     }
     if ($('btn-toggle-auth-mode')) {
       $('btn-toggle-auth-mode').style.display = staffCount > 0 && pinOn ? 'inline-flex' : 'none';
-      $('btn-toggle-auth-mode').textContent = useStaff ? 'Use Host PIN instead' : 'Sign in with Staff ID';
+      $('btn-toggle-auth-mode').textContent = useStaff ? 'Use Host PIN instead' : 'Staff Login';
     }
     $('lock-error-msg').textContent = '';
   }
 
   async function init() {
     App.Storage.load();
-    if (App.CloudSync && App.CloudSync.hasLocalDiskBackend() && App.Security && App.Security.ensureDefaultHostPin) {
+    if (App.Security && App.Security.ensureDefaultHostPin) {
       await App.Security.ensureDefaultHostPin();
     }
     if (App.Security && App.Security.ensureDefaultAdmin) {

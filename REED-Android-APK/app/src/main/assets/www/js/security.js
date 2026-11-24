@@ -63,23 +63,23 @@
 
   function markSessionUnlocked() {
     try {
-      global.sessionStorage.setItem(SESSION_UNLOCK_KEY, String(Date.now()));
+      global.localStorage.setItem(SESSION_UNLOCK_KEY, String(Date.now()));
     } catch (_) {}
   }
 
   function clearSessionUnlocked() {
     try {
-      global.sessionStorage.removeItem(SESSION_UNLOCK_KEY);
+      global.localStorage.removeItem(SESSION_UNLOCK_KEY);
     } catch (_) {}
   }
 
   function isSessionStillUnlocked(cfg) {
     try {
-      const raw = global.sessionStorage.getItem(SESSION_UNLOCK_KEY);
+      const raw = global.localStorage.getItem(SESSION_UNLOCK_KEY);
       if (!raw) return false;
       const lastTs = Number(raw) || 0;
       if (!lastTs) return false;
-      const maxIdleMins = Number(cfg.autoLockMinutes) || 0;
+      const maxIdleMins = Number(cfg.autoLockMinutes) || 30;
       if (maxIdleMins > 0 && Date.now() - lastTs > maxIdleMins * 60 * 1000) {
         clearSessionUnlocked();
         return false;
@@ -199,7 +199,7 @@
       pinEnabled: false,
       pinSalt: '',
       pinHash: '',
-      autoLockMinutes: 15,
+      autoLockMinutes: 30,
       operatorName: 'Warehouse Staff',
       failedAttempts: 0,
       lockedUntil: 0,
@@ -360,7 +360,7 @@
   async function ensureDefaultHostPin() {
     const cfg = loadConfig();
     if (cfg.hostPinInitialized) return false;
-    const res = await setPin('2647', cfg.autoLockMinutes || 15, cfg.operatorName || 'REED Host');
+    const res = await setPin('2647', cfg.autoLockMinutes || 30, cfg.operatorName || 'REED Host');
     if (res && res.ok) {
       const upd = loadConfig();
       upd.hostPinInitialized = true;
@@ -393,14 +393,14 @@
 
   function getCurrentStaff() {
     try {
-      const raw = global.sessionStorage.getItem(STAFF_SESSION_KEY);
+      const raw = global.localStorage.getItem(STAFF_SESSION_KEY);
       if (!raw) return null;
       const parsed = safeJSONParse(raw, null);
       if (!parsed || !parsed.id) return null;
       const live = getStaffList().find((u) => u.id === parsed.id);
       if (live) {
         if (!live.active) {
-          global.sessionStorage.removeItem(STAFF_SESSION_KEY);
+          global.localStorage.removeItem(STAFF_SESSION_KEY);
           return null;
         }
         return {
@@ -420,9 +420,9 @@
   function setCurrentStaffSession(emp) {
     try {
       if (!emp) {
-        global.sessionStorage.removeItem(STAFF_SESSION_KEY);
+        global.localStorage.removeItem(STAFF_SESSION_KEY);
       } else {
-        global.sessionStorage.setItem(
+        global.localStorage.setItem(
           STAFF_SESSION_KEY,
           JSON.stringify({
             id: emp.id,

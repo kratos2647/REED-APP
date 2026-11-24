@@ -2,7 +2,7 @@
  * MM VIRSA Ops — Service Worker (PWA + Android APK Offline Shell)
  * Caches static UI assets for instant mobile startup while keeping API/Sync live.
  */
-const CACHE_NAME = 'reed-ops-v42';
+const CACHE_NAME = 'reed-ops-v44';
 const APP_SHELL = [
   './',
   './index.html',

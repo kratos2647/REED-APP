@@ -3233,6 +3233,28 @@ button { cursor: pointer; }
   }
 }
 
+/* Eliminate mobile blue tap flash & click focus outline across Web & Android APK */
+*, *::before, *::after, button, a, input, select, textarea, label, [role="button"], video {
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+.optical-frame,
+.optical-stage,
+.optical-bar,
+.live-hud-top-row,
+.scan-feedback-card {
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+button:focus,
+button:focus-visible,
+a:focus,
+[role="button"]:focus {
+  outline: none !important;
+}
+
 @media (max-width: 390px) {
   .sync-chip span {
     display: none;

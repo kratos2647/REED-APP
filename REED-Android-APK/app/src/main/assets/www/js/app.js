@@ -2176,21 +2176,49 @@
       App.Audio.setMuted(next);
       $('btn-toggle-sound').textContent = next ? 'Sound: OFF' : 'Sound: ON';
     });
+    let camHistoryPushed = false;
+    const stopReturnCam = async (fromPopState) => {
+      // Close UI immediately (0ms) so mobile HUD responds instantly on tap
+      updateReturnCamUI(false);
+      if (camHistoryPushed) {
+        camHistoryPushed = false;
+        if (!fromPopState) {
+          try {
+            if (global.history && global.history.state && global.history.state.reedLiveCam) {
+              global.history.back();
+            }
+          } catch (_) {}
+        }
+      }
+      try {
+        await App.Scanner.stop();
+      } catch (_) {}
+      updateReturnCamUI(false);
+    };
+
     const startReturnCam = async () => {
       $('return-camera-error').style.display = 'none';
       App.Scanner.resetCameraCooldown();
       updateReturnCamUI(true);
+      if (!camHistoryPushed) {
+        try {
+          if (global.history && global.history.pushState) {
+            global.history.pushState({ reedLiveCam: true }, '');
+            camHistoryPushed = true;
+          }
+        } catch (_) {}
+      }
       const r = await App.Scanner.start(
         'return-camera-reader',
         (code) => handleScannerCapture(code),
         (err) => {
-          updateReturnCamUI(false);
+          stopReturnCam(false);
           $('return-camera-error').textContent = err;
           $('return-camera-error').style.display = 'block';
         },
         { cooldownMs: 1500 }
       );
-      if (!r.ok) updateReturnCamUI(false);
+      if (!r.ok) stopReturnCam(false);
       else updateReturnCamUI(true, r.capabilities);
     };
     $('btn-start-return-cam').addEventListener('click', startReturnCam);
@@ -2210,10 +2238,27 @@
         updateReturnCamUI(false);
       }
     });
-    const stopReturnCam = async () => { await App.Scanner.stop(); updateReturnCamUI(false); };
-    $('btn-stop-return-cam').addEventListener('click', stopReturnCam);
-    if ($('btn-live-cam-back')) $('btn-live-cam-back').addEventListener('click', stopReturnCam);
-    if ($('btn-live-cam-done')) $('btn-live-cam-done').addEventListener('click', stopReturnCam);
+    $('btn-stop-return-cam').addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); stopReturnCam(false); });
+    if ($('btn-live-cam-back')) $('btn-live-cam-back').addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); stopReturnCam(false); });
+    if ($('btn-live-cam-done')) $('btn-live-cam-done').addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); stopReturnCam(false); });
+
+    // Mobile Back gesture / browser Back button closes live camera back to Scanner home
+    global.addEventListener('popstate', () => {
+      const stage = $('return-camera-stage');
+      if (stage && stage.classList.contains('active')) {
+        stopReturnCam(true);
+      }
+    });
+
+    // Android APK MainActivity hardware/gesture Back hook
+    global.__reedHandleBack = function () {
+      const stage = $('return-camera-stage');
+      if (stage && stage.classList.contains('active')) {
+        stopReturnCam(true);
+        return 'handled';
+      }
+      return '';
+    };
     $('btn-return-torch').addEventListener('click', async () => {
       const r = await App.Scanner.toggleTorch();
       $('btn-return-torch').textContent = r.torchOn ? 'Flash ON' : 'Flash';

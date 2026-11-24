@@ -140,8 +140,20 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        if (webView != null && webView.canGoBack()) {
-            webView.goBack();
+        if (webView != null) {
+            webView.evaluateJavascript(
+                "(function(){ return (window.__reedHandleBack ? window.__reedHandleBack() : ''); })()",
+                value -> {
+                    if (value != null && value.contains("handled")) {
+                        return;
+                    }
+                    if (webView.canGoBack()) {
+                        webView.goBack();
+                    } else {
+                        MainActivity.super.onBackPressed();
+                    }
+                }
+            );
         } else {
             super.onBackPressed();
         }
